@@ -44,6 +44,9 @@
       terraform init
       terraform apply
 
+
+* Appply network project manually
+  
 * Apply changes from cicd
 
 if you see
@@ -52,3 +55,4 @@ if you see
 Error: Error creating Trigger: googleapi: Error 400: Repository mapping does not exist. Please visit https://console.cloud.google.com/cloud-build/triggers/connect?project=... to connect a repository to your project
 ```
 please just click a link and integrate your repository with the Cloud Build. Run Apply again.
+

@@ -53,7 +53,7 @@ module "project" {
 
 module "forseti" {
   source  = "terraform-google-modules/forseti/google"
-  version = "~> 5.2.1"
+  version = "~> 5.2.2"
 
   domain          = "cs-gcp-t.com"
   project_id      = module.project.project_id
