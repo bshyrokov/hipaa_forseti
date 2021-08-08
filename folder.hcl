@@ -137,12 +137,12 @@ template "audit" {
       project_id = "prj-audit-rgol"
     }
     logs_bigquery_dataset = {
-      dataset_id = "healthcare_1yr_folder_audit_logs"
-      sink_name  = "healthcare-bigquery-audit-logs-sink"
+      dataset_id = "healthcare_1yr_folder_audit_logs-rgol"
+      sink_name  = "healthcare-bigquery-audit-logs-sink-rgol"
     }
     logs_storage_bucket = {
-      name      = "healthcare-7yr-folder-audit-logs"
-      sink_name = "healthcare-storage-audit-logs-sink"
+      name      = "healthcare-7yr-folder-audit-logs-rgol"
+      sink_name = "healthcare-storage-audit-logs-sink-rgol"
     }
     additional_filters = [
       # Need to escape \ and " to preserve them in the final filter strings.

@@ -72,7 +72,7 @@ module "bigquery_export" {
   source  = "terraform-google-modules/log-export/google"
   version = "~> 6.0.0"
 
-  log_sink_name          = "healthcare-bigquery-audit-logs-sink"
+  log_sink_name          = "healthcare-bigquery-audit-logs-sink-rgol"
   destination_uri        = module.bigquery_destination.destination_uri
   filter                 = "logName:\"logs/cloudaudit.googleapis.com\" OR logName=\"logs/forseti\" OR logName=\"logs/application\""
   parent_resource_type   = "folder"
@@ -85,7 +85,7 @@ module "bigquery_destination" {
   source  = "terraform-google-modules/log-export/google//modules/bigquery"
   version = "~> 6.0.0"
 
-  dataset_name             = "healthcare_1yr_folder_audit_logs"
+  dataset_name             = "healthcare_1yr_folder_audit_logs-rgol"
   project_id               = module.project.project_id
   location                 = "us-east1"
   log_sink_writer_identity = module.bigquery_export.writer_identity
@@ -96,7 +96,7 @@ module "storage_export" {
   source  = "terraform-google-modules/log-export/google"
   version = "~> 6.0.0"
 
-  log_sink_name          = "healthcare-storage-audit-logs-sink"
+  log_sink_name          = "healthcare-storage-audit-logs-sink-rgol"
   destination_uri        = module.storage_destination.destination_uri
   filter                 = "logName:\"logs/cloudaudit.googleapis.com\" OR logName=\"logs/forseti\" OR logName=\"logs/application\""
   parent_resource_type   = "folder"
@@ -112,7 +112,7 @@ module "storage_destination" {
   source  = "terraform-google-modules/log-export/google//modules/storage"
   version = "~> 6.0.0"
 
-  storage_bucket_name      = "healthcare-7yr-folder-audit-logs"
+  storage_bucket_name      = "healthcare-7yr-folder-audit-logs-rgol"
   project_id               = module.project.project_id
   location                 = "us-central1"
   log_sink_writer_identity = module.storage_export.writer_identity
