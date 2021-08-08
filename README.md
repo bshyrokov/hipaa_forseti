@@ -66,7 +66,8 @@
   [Installing the Cloud Build app](https://cloud.google.com/cloud-build/docs/automating-builds/create-github-app-triggers#installing_the_cloud_build_app).
   To perform this operation, you need Admin permission in that GitHub repository. This can't be done through automation.
 
-  * Because TF Engine is outdated and has some issues you have to extend Service Account role for cicd by adding `roles/serviceusage.serviceUsageAdmin` and `roles/compute.instanceAdmin.v1`
+  * Because TF Engine is outdated and has some issues you have to extend Service Account role for cicd by adding `roles/serviceusage.serviceUsageAdmin`, `roles/compute.instanceAdmin.v1`,
+    `roles/compute.securityAdmin` and `roles/compute.networkAdmin`
   to the `cloudbuild_sa_editor_roles` array in `local` variables in the `cicd/main.tf` file. After this we can apply changes by:
   
         cd ${MAIN}/cicd
@@ -84,5 +85,5 @@
   * You can set which folder will be checking by Cloud Build
     by adding folder to the `managed_dir` array in the `folder.hcl` configuration. In our case it'll be `audit`, `prod-networks` and `monitor` folder.
   * After each commit you'll see the validation and plan job. When you'll merge or commit directly to the master the changes will be applied after running job in the Cloud Build.
-  * Before pushing to master please change Forseti version in the `monitor/main.tf` file from `5.2.1` to `5.2.2`.
+  * Before pushing to master please change Forseti version and image in the `monitor/main.tf` file from `5.2.1` to `5.2.2` and from `gce-uefi-images/ubuntu-1804-lts` to `ubuntu-1804-bionic-v20210415`.
   * Now you can trigger the job `tf-apply-prod` by click `RUN` button.
