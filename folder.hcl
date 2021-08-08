@@ -1,0 +1,241 @@
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{{$recipes := "git@github.com:GoogleCloudPlatform/healthcare-data-protection-suite.git//templates/tfengine/recipes"}}
+
+data = {
+  parent_type     = "folder"
+  parent_id       = "909984588844"
+  billing_account = "011BB4-25F476-819B61"
+  state_bucket    = "bck-hipaa-demo-terraform-state"
+
+  # Default locations for resources. Can be overridden in individual templates.
+  bigquery_location = "us-east1"
+  cloud_sql_region  = "us-central1"
+  compute_region    = "us-central1"
+  storage_location  = "us-central1"
+}
+
+template "devops" {
+  recipe_path = "{{$recipes}}/devops.hcl"
+  output_path = "./devops"
+  data = {
+    # TODO(user): Uncomment and re-run the engine after generated devops module has been deployed.
+    # Run `terraform init` in the devops module to backup its state to GCS.
+    enable_gcs_backend = true
+
+    admins_group = {
+      id     = "group_org_admins@cs-gcp-t.com"
+      exists = true
+    }
+
+    project = {
+      project_id = "proj-devops-rgol"
+      owners_group = {
+        id     = "group_org_admins@cs-gcp-t.com"
+        exists = true
+      }
+    }
+  }
+}
+
+# Must first be deployed manually before 'cicd' is deployed because some groups created
+# here are used in 'cicd' template.
+template "groups" {
+  recipe_path = "{{$recipes}}/project.hcl"
+  output_path = "./groups"
+  data = {
+    project = {
+      project_id = "proj-devops-rgol"
+      exists     = true
+    }
+    resources = {
+      groups = [
+        {
+          id          = "healthcare-auditors@cs-gcp-t.com"
+          customer_id = "C03kl1ar3"
+          owners = [
+            "rgola@cs-gcp-t.com"
+          ]
+        },
+        {
+          id          = "healthcare-cicd-viewers@cs-gcp-t.com"
+          customer_id = "C03kl1ar3"
+          owners = [
+            "rgola@cs-gcp-t.com"
+          ]
+        },
+        {
+          id          = "healthcare-cicd-editors@cs-gcp-t.com"
+          customer_id = "C03kl1ar3"
+          owners = [
+            "rgola@cs-gcp-t.com"
+          ]
+        },
+      ]
+    }
+  }
+}
+
+template "cicd" {
+  recipe_path = "{{$recipes}}/cicd.hcl"
+  output_path = "./cicd"
+  data = {
+    project_id = "proj-devops-rgol"
+    github = {
+      owner = "rgolab"
+      name  = "hipaa_forseti"
+    }
+
+    # Required for scheduler.
+    scheduler_region = "us-east1"
+
+    build_viewers = ["group:healthcare-cicd-viewers@cs-gcp-t.com"]
+    build_editors = ["group:healthcare-cicd-editors@cs-gcp-t.com"]
+
+    terraform_root = "terraform"
+    envs = [
+      {
+        name        = "prod"
+        branch_name = "master"
+        triggers = {
+          validate = {}
+          plan = {
+            run_on_schedule = "0 12 * * *" # Run at 12 PM EST everyday
+          }
+          apply = {
+            run_on_push = false # Do not auto run on push to branch
+          }
+        }
+        managed_dirs = [
+          "audit",
+          "prod-networks",
+          "monitor",
+        ]
+      }
+    ]
+  }
+}
+
+template "audit" {
+  recipe_path = "{{$recipes}}/audit.hcl"
+  output_path = "./audit"
+  data = {
+    auditors_group = "healthcare-auditors@cs-gcp-t.com"
+    project = {
+      project_id = "prj-audit-rgol"
+    }
+    logs_bigquery_dataset = {
+      dataset_id = "healthcare_1yr_folder_audit_logs"
+      sink_name  = "healthcare-bigquery-audit-logs-sink"
+    }
+    logs_storage_bucket = {
+      name      = "healthcare-7yr-folder-audit-logs"
+      sink_name = "healthcare-storage-audit-logs-sink"
+    }
+    additional_filters = [
+      # Need to escape \ and " to preserve them in the final filter strings.
+      "logName=\\\"logs/forseti\\\"",
+      "logName=\\\"logs/application\\\"",
+    ]
+  }
+}
+
+# Prod central networks project for team 1.
+template "project_networks" {
+  recipe_path = "{{$recipes}}/project.hcl"
+  output_path = "./prod-networks"
+  data = {
+    project = {
+      project_id         = "prj-prod-networks-rgol"
+      is_shared_vpc_host = true
+      apis = [
+        "compute.googleapis.com",
+        "servicenetworking.googleapis.com",
+      ]
+    }
+    resources = {
+      compute_networks = [{
+        name = "prod-network"
+        subnets = [
+          {
+            name     = "forseti-subnet"
+            ip_range = "10.1.0.0/16"
+          },
+        ]
+      }]
+      compute_routers = [{
+        name    = "forseti-router"
+        network = "$${module.prod_network.network.network.self_link}"
+        nats = [{
+          name                               = "forseti-nat"
+          source_subnetwork_ip_ranges_to_nat = "LIST_OF_SUBNETWORKS"
+          subnetworks = [{
+            name                     = "$${module.prod_network.subnets[\"us-central1/forseti-subnet\"].self_link}"
+            source_ip_ranges_to_nat  = ["PRIMARY_IP_RANGE"]
+            secondary_ip_range_names = []
+          }]
+        }]
+      }]
+    }
+  }
+}
+
+template "monitor" {
+  recipe_path = "{{$recipes}}/monitor.hcl"
+  output_path = "./monitor"
+  data = {
+    project = {
+      project_id = "prj-monitor-rgol"
+      shared_vpc_attachment = {
+        host_project_id = "prj-prod-networks-rgol"
+      }
+      apis = [
+        "compute.googleapis.com",
+      ]
+    }
+    forseti = {
+      domain  = "cs-gcp-t.com"
+      network = "prod-network"
+      subnet  = "forseti-subnet"
+      security_command_center_source_id = "organizations/369138972385/sources/15146003993443038854"
+    }
+  }
+}
+
+# Subfolders.
+template "folders" {
+  recipe_path = "{{$recipes}}/folders.hcl"
+  output_path = "./folders"
+  data = {
+    folders = [
+      {
+        display_name = "prod"
+      },
+      {
+        display_name  = "team1"
+        resource_name = "prod_team1" // Prevent name conflict with dev/team1.
+        parent        = "$${google_folder.prod.name}"
+      },
+      {
+        display_name = "dev"
+      },
+      {
+        display_name  = "team1"
+        resource_name = "dev_team1" // Prevent name conflict with prod/team1.
+        parent        = "$${google_folder.dev.name}"
+      }
+    ]
+  }
+}
