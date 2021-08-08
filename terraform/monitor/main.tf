@@ -73,15 +73,16 @@ module "forseti" {
   cloudsql_private  = true
   client_enabled    = false
   server_private    = true
-  server_boot_image = "ubuntu-1804-bionic-v20210415"
+  server_boot_image = "ubuntu-1804-bionic-v20210720"
   server_shielded_instance_config = {
     enable_secure_boot          = true
     enable_vtpm                 = true
     enable_integrity_monitoring = true
   }
 
-  manage_rules_enabled     = false
-  config_validator_enabled = true
+  manage_rules_enabled          = false
+  config_validator_enabled      = true
+  enabled_apis_enabled          = true
 
   # Enable Security Command Center (SCC) notification.
   cscc_violations_enabled = true

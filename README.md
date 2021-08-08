@@ -66,6 +66,13 @@
   [Installing the Cloud Build app](https://cloud.google.com/cloud-build/docs/automating-builds/create-github-app-triggers#installing_the_cloud_build_app).
   To perform this operation, you need Admin permission in that GitHub repository. This can't be done through automation.
 
+  * Modify and fix Forseti component:
+    * remove `google-cloud-sdk` from the metadata startup script from file `${MAIN}/terraform/monitor/.terraform/modules/forseti/modules/server/templates/scripts/forseti_server_startup_script.sh.tpl` (line 23)
+    * add to the `terraform/monitor/main.tf` in the `forseti` configuration section
+      ```terraform
+      enabled_apis_enabled = true
+      ```
+
   * Because TF Engine is outdated and has some issues you have to extend Service Account role for cicd by adding `roles/serviceusage.serviceUsageAdmin`, `roles/compute.instanceAdmin.v1`,
     `roles/compute.securityAdmin` and `roles/compute.networkAdmin`
   to the `cloudbuild_sa_editor_roles` array in `local` variables in the `cicd/main.tf` file. After this we can apply changes by:
@@ -85,5 +92,22 @@
   * You can set which folder will be checking by Cloud Build
     by adding folder to the `managed_dir` array in the `folder.hcl` configuration. In our case it'll be `audit`, `prod-networks` and `monitor` folder.
   * After each commit you'll see the validation and plan job. When you'll merge or commit directly to the master the changes will be applied after running job in the Cloud Build.
-  * Before pushing to master please change Forseti version and image in the `monitor/main.tf` file from `5.2.1` to `5.2.2` and from `gce-uefi-images/ubuntu-1804-lts` to `ubuntu-1804-bionic-v20210415`.
+  * Before pushing to master please change Forseti version and image in the `monitor/main.tf` file from `5.2.1` to `5.2.2` and from `gce-uefi-images/ubuntu-1804-lts` to `ubuntu-1804-bionic-v20210720`.
   * Now you can trigger the job `tf-apply-prod` by click `RUN` button.
+
+
+Modifications necessary for making Forseti scanner works:
+* modify `/home/ubuntu/forseti-security/install/gcp/scripts/run_forseti.sh` in line 65 (leave the line in the below form):
+  ```bash
+  GET_MODEL_STATUS="forseti model get ${MODEL_NAME} | python3 -c \"import sys, json; print(json.load(sys.stdin)['status'])\""
+  ```
+* copy `rules` and `policy-library` to the bucket
+  * >Open the Forseti project in the Google Cloud Console and go to Storage in the menu. The Forseti Server bucket will be named forseti-server-{SUFFIX} where {SUFFIX} is a random 8 character suffix setup at the time Forseti is deployed. Create a folder with the name policy-library inside the Forseti Server bucket and make note of the suffix.
+  * run
+    ```bash
+    cd ${MAIN}/terraform/monitor
+    git clone git@github.com:forseti-security/policy-library.git
+    gsutil -m rsync -d -r policy-library/policies gs://forseti-server-${SUFFIX}/policy-library/policies
+    gsutil -m rsync -d -r policy-library/lib gs://forseti-server-${SUFFIX}/policy-library/lib
+    gsutil -m rsync -d -r rules/ gs://forseti-server-${SUFFIX}/rules/
+    ```
