@@ -1,4 +1,8 @@
-#
+# High Level Design
+
+The result of applying changes described in this README.md:
+
+![HLD](./HLD.png)
 
 ## Limitations
 
@@ -50,7 +54,6 @@
       cd ${MAIN}/groups
       terraform init
       terraform apply
-
 
 * Apply network project manually
 
@@ -111,3 +114,20 @@ Modifications necessary for making Forseti scanner works:
     gsutil -m rsync -d -r policy-library/lib gs://forseti-server-${SUFFIX}/policy-library/lib
     gsutil -m rsync -d -r rules/ gs://forseti-server-${SUFFIX}/rules/
     ```
+
+## Cleanning up
+
+* Remove all liens for each project
+
+      gcloud alpha resource-manager liens list
+      gcloud alpha resource-manager liens delete ${LIENS_NAME}
+
+* Remove each project which was created from the console or by using `gcloud` cli
+
+## Problem to solved before creating final client offer
+
+* Prepare `softserver` codebase based on the generated files
+* Solve all issues in the code
+* Think how to solve the problem in the script which is copied from repository on each reboot
+* Create the list of rules which we'll apply
+* Get familiar with the Forseti Security tools (policies, rules, scanner, notifications, etc.)
