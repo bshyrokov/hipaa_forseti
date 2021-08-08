@@ -74,5 +74,7 @@
     ```
     please just click a link and integrate your repository with the Cloud Build. After integration run `terraform apply` again.
 
-* Now you can use Cloud Build as your infrastructure automation tool. After each commit you'll see the validation and plan job.
-When you merge or commit directly to the master the changes will be applied.
+* Now you can use Cloud Build as your infrastructure automation tool. You can set which folder will be checking by Cloud Build
+  by adding folder to the `managed_dir` array in the `folder.hcl` configuration. In our case it'll be `audit`, `prod-networks` and `monitor` folder.
+  After each commit you'll see the validation and plan job. When you'll merge or commit directly to the master the changes will be applied after running job in the Cloud Build.
+  Before pushing to master please change Forseti version in the `monitor/main.tf` file from `5.2.1` to `5.2.2`.

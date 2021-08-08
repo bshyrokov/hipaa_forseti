@@ -122,8 +122,6 @@ template "cicd" {
           "audit",
           "prod-networks",
           "monitor",
-          "folders",
-          "groups",
         ]
       }
     ]

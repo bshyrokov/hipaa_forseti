@@ -36,7 +36,7 @@ resource "google_cloudbuild_trigger" "validate_prod" {
 
   substitutions = {
     _TERRAFORM_ROOT = "terraform"
-    _MANAGED_DIRS   = "audit prod-networks monitor folders groups"
+    _MANAGED_DIRS   = "audit prod-networks monitor"
   }
 
   depends_on = [
@@ -66,7 +66,7 @@ resource "google_cloudbuild_trigger" "plan_prod" {
 
   substitutions = {
     _TERRAFORM_ROOT = "terraform"
-    _MANAGED_DIRS   = "audit prod-networks monitor folders groups"
+    _MANAGED_DIRS   = "audit prod-networks monitor"
   }
 
   depends_on = [
@@ -99,7 +99,7 @@ resource "google_cloudbuild_trigger" "plan_scheduled_prod" {
 
   substitutions = {
     _TERRAFORM_ROOT = "terraform"
-    _MANAGED_DIRS   = "audit prod-networks monitor folders groups"
+    _MANAGED_DIRS   = "audit prod-networks monitor"
   }
 
   depends_on = [
@@ -152,7 +152,7 @@ resource "google_cloudbuild_trigger" "apply_prod" {
 
   substitutions = {
     _TERRAFORM_ROOT = "terraform"
-    _MANAGED_DIRS   = "audit prod-networks monitor folders groups"
+    _MANAGED_DIRS   = "audit prod-networks monitor"
   }
 
   depends_on = [
