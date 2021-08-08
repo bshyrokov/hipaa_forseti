@@ -3,6 +3,7 @@
 ## Limitations
 
 * Only GitHub repository could be integrated. (This is limitation of the TF Engine)
+* Project names are not randomly named. (You have to remember to create name which doesn't exist)
 
 ## Requirements
 
