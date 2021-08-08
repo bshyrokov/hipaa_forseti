@@ -137,7 +137,7 @@ template "audit" {
       project_id = "prj-audit-rgol"
     }
     logs_bigquery_dataset = {
-      dataset_id = "healthcare_1yr_folder_audit_logs-rgol"
+      dataset_id = "healthcare_1yr_folder_audit_logs_rgol"
       sink_name  = "healthcare-bigquery-audit-logs-sink-rgol"
     }
     logs_storage_bucket = {

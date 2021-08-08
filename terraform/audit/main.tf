@@ -85,7 +85,7 @@ module "bigquery_destination" {
   source  = "terraform-google-modules/log-export/google//modules/bigquery"
   version = "~> 6.0.0"
 
-  dataset_name             = "healthcare_1yr_folder_audit_logs-rgol"
+  dataset_name             = "healthcare_1yr_folder_audit_logs_rgol"
   project_id               = module.project.project_id
   location                 = "us-east1"
   log_sink_writer_identity = module.bigquery_export.writer_identity
